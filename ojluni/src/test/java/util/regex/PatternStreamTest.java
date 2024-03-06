@@ -55,13 +55,6 @@ import org.openjdk.testlib.java.util.stream.TestData;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import static java.util.regex.Pattern.SPLIT_AS_STREAM_RETURNS_SINGLE_EMPTY_STRING;
-
-import android.compat.Compatibility;
-
-import dalvik.annotation.compat.VersionCodes;
-import dalvik.system.VMRuntime;
-
 @Test
 public class PatternStreamTest extends OpTestCase {
 

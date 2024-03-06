@@ -18,6 +18,7 @@ package android.system;
 
 import static android.annotation.SystemApi.Client.MODULE_LIBRARIES;
 
+import android.annotation.FlaggedApi;
 import android.annotation.SystemApi;
 import android.compat.annotation.UnsupportedAppUsage;
 
@@ -392,10 +393,21 @@ public final class OsConstants {
     public static final int IPPROTO_RAW = placeholder();
     public static final int IPPROTO_TCP = placeholder();
     public static final int IPPROTO_UDP = placeholder();
+
+    /**
+     * Encapsulation Security Payload protocol
+     *
+     * <p>Defined in /uapi/linux/in.h
+     */
+    @FlaggedApi("com.android.libcore.v_apis")
+    public static final int IPPROTO_ESP = placeholder();
+
     public static final int IPV6_CHECKSUM = placeholder();
     public static final int IPV6_MULTICAST_HOPS = placeholder();
     public static final int IPV6_MULTICAST_IF = placeholder();
     public static final int IPV6_MULTICAST_LOOP = placeholder();
+    @FlaggedApi("com.android.libcore.v_apis")
+    public static final int IPV6_PKTINFO = placeholder();
     public static final int IPV6_RECVDSTOPTS = placeholder();
     public static final int IPV6_RECVHOPLIMIT = placeholder();
     public static final int IPV6_RECVHOPOPTS = placeholder();
@@ -467,6 +479,15 @@ public final class OsConstants {
      * SELinux enforces that only system_server and netd may use this netlink socket type.
      */
     public static final int NETLINK_INET_DIAG = placeholder();
+
+    /**
+     * SELinux enforces that only system_server and netd may use this netlink socket type.
+     *
+     * @see <a href="https://man7.org/linux/man-pages/man7/netlink.7.html">netlink(7)</a>
+     */
+    @FlaggedApi("com.android.libcore.v_apis")
+    public static final int NETLINK_XFRM = placeholder();
+
     public static final int NI_DGRAM = placeholder();
     public static final int NI_NAMEREQD = placeholder();
     public static final int NI_NOFQDN = placeholder();
@@ -686,6 +707,8 @@ public final class OsConstants {
     public static final int SOCK_STREAM = placeholder();
     public static final int SOL_SOCKET = placeholder();
     public static final int SOL_UDP = placeholder();
+    @FlaggedApi("com.android.libcore.v_apis")
+    public static final int SOL_PACKET = placeholder();
     public static final int SO_BINDTODEVICE = placeholder();
     public static final int SO_BROADCAST = placeholder();
     public static final int SO_DEBUG = placeholder();
@@ -710,6 +733,8 @@ public final class OsConstants {
     public static final int SO_SNDLOWAT = placeholder();
     public static final int SO_SNDTIMEO = placeholder();
     public static final int SO_TYPE = placeholder();
+    @FlaggedApi("com.android.libcore.v_apis")
+    public static final int PACKET_IGNORE_OUTGOING = placeholder();
     /**
      * Bitmask for flags argument of
      * {@link splice(java.io.FileDescriptor, Int64Ref, FileDescriptor, Int64Ref, long, int)}.

@@ -463,7 +463,9 @@ java_defaults {
 // are also in the public SDK API from API level 26 onwards.
 java_library {
     name: "core-lambda-stubs",
-    visibility: ["//visibility:public"],
+    visibility: [
+        "//visibility:public",
+    ],
     defaults: ["core_lambda_stubs_defaults"],
     srcs: [
         ":openjdk_lambda_stub_files",
@@ -527,12 +529,14 @@ java_library_static {
     name: "core-test-rules",
     visibility: [
         "//art/build/sdk",
+        "//cts/tests/core/runner-axt",
         "//cts/tests/tests/util",
         "//external/conscrypt",
         "//external/conscrypt/apex/tests",
         "//frameworks/base/location/tests/locationtests",
         "//frameworks/base/core/tests/coretests",
         "//frameworks/base/wifi/tests",
+        "//libcore/ojluni/src/test",
         "//libcore/luni/src/test/java9compatibility",
         "//packages/modules/Wifi/framework/tests",
     ],
@@ -541,7 +545,10 @@ java_library_static {
         "dalvik/test-rules/src/main/**/*.java",
         "test-rules/src/main/**/*.java",
     ],
-    static_libs: ["junit"],
+    static_libs: [
+        "junit",
+        "platform-test-annotations",
+    ],
 
     sdk_version: "none",
     system_modules: "core-all-system-modules",
@@ -685,9 +692,9 @@ filegroup {
 genrule {
     name: "core-tests-smali-dex",
     srcs: ["luni/src/test/java/**/*.smali"],
-    cmd: "$(location smali) ass --api 28 -o $(out) $(in)",
+    cmd: "$(location android-smali) ass --api 28 -o $(out) $(in)",
     out: ["core-tests-smali.dex"],
-    tools: ["smali"],
+    tools: ["android-smali"],
 }
 
 filegroup {
@@ -706,6 +713,7 @@ filegroup {
         "ojluni/src/test/java/util/regex/**/*",
         "ojluni/src/test/java/util/Base64/**/*",
         "ojluni/src/test/java/util/Scanner/**/*",
+        "ojluni/src/test/java/util/Properties/**/*",
     ],
     exclude_srcs: ["ojluni/src/test/java/**/*.java"],
 }
@@ -763,6 +771,7 @@ java_test {
     ],
 
     static_libs: [
+        "apache-xml-tests",
         "core-compat-test-rules",
         "core-java-9-compatibility-tests",
         "core-java-9-language-tests",
@@ -801,6 +810,8 @@ java_test {
             "-Xep:DoubleBraceInitialization:WARN",
             "-Xep:RandomModInteger:WARN",
             "-Xep:IdentityBinaryExpression:WARN",
+            "-Xep:UnnecessaryStringBuilder:OFF", // https://github.com/google/error-prone/issues/4195
+            "-Xep:InvalidPatternSyntax:WARN",
         ],
     },
 
@@ -813,6 +824,10 @@ java_test {
     visibility: [
         "//art/build/sdk",
         "//external/conscrypt/apex/tests",
+    ],
+    exclude_srcs: [
+        "luni/src/test/java/libcore/javax/crypto/CipherTest.java",
+        "luni/src/test/java/libcore/javax/crypto/spec/ChaCha20ParameterSpecTest.java",
     ],
     srcs: [
         "harmony-tests/src/test/java/org/apache/harmony/tests/javax/net/ssl/*.java",
@@ -847,6 +862,20 @@ java_test {
     },
 }
 
+java_genrule {
+    name: "libcore-non-cts-tests-txt",
+    host_supported: true,
+    srcs: [
+        ":apache-harmony-tests{.jar}",
+        ":conscrypt-tests{.jar}",
+        ":core-tests{.jar}",
+        ":core-ojtests{.jar}",
+    ],
+    tools: ["non-cts-json-generator"],
+    out: ["libcore-non-cts-tests.txt"],
+    cmd: "$(location non-cts-json-generator) $(in) > $(out)",
+}
+
 // Exports annotated stubs source files in ojluni/annotations/sdk to make them
 // available to metalava. Used for nullability annotations in OpenJDK source.
 droiddoc_exported_dir {
@@ -871,6 +900,12 @@ droiddoc_exported_dir {
         "//libcore/mmodules/intracoreapi",
     ],
     path: "ojluni/annotations/mmodule",
+}
+
+droiddoc_exported_dir {
+    name: "ojluni-annotated-flagged-stubs",
+    path: "ojluni/annotations/flagged_api",
+    visibility: ["//visibility:private"],
 }
 
 // A file containing the list of tags that are "known" to us from the OpenJdk
@@ -921,16 +956,11 @@ java_library {
 }
 
 // A special set of system modules needed to build art.module.public.api
-// that contain nullability annotations when targeting java language level 1.9
-// and above.
 java_system_modules {
     name: "java-current-stubs-system-modules",
     libs: [
         // Minimal set of classes required for a system module.
         "java.current.stubs",
-
-        // The nullability annotations used by the generated stubs.
-        "stub-annotations",
     ],
 }
 
@@ -970,6 +1000,9 @@ java_sdk_library {
         ":openjdk_mmodule_extra_files",
         ":okhttp_api_files",
     ],
+    api_srcs: [
+        ":openjdk_javadoc_only_files",
+    ],
     libs: [
         // Put framework-api-annotations into libs to avoid exposing the definition of framework's
         // annotations from libcore (wrong place) instead of framework (correct place).
@@ -1001,7 +1034,10 @@ java_sdk_library {
         "--hide-annotation libcore.api.Hide",
     ],
 
-    merge_inclusion_annotations_dirs: ["ojluni-annotated-mmodule-stubs"],
+    merge_inclusion_annotations_dirs: [
+        "ojluni-annotated-flagged-stubs",
+        "ojluni-annotated-mmodule-stubs",
+    ],
     // Emit nullability annotations from the source to the stub files.
     annotations_enabled: true,
 
